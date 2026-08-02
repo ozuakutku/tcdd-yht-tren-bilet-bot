@@ -1,174 +1,137 @@
-# TCDD Tren Bileti Takip Botu
+# TCDD YHT Tren Bileti Takip Botu - Fork
 
-TCDD YHT tren biletlerinde boş koltuk takibi yapan gelişmiş bot uygulaması. Hem web arayüzü hem de terminal (headless) modunda çalışabilir. Boş koltuk bulunduğunda Telegram üzerinden anlık bildirim gönderir.
+Bu repo, [`envermeister/tcdd-yht-tren-bilet-bot`](https://github.com/envermeister/tcdd-yht-tren-bilet-bot) projesinden türetilmiş bir fork'tur.
 
-![TCDD Bot](img.png)
+Bu fork üzerinde yapılan başlıca geliştirmeler:
 
-## 🚀 Yeni Özellikler
+- Telegram üzerinden menülü bot kontrolü
+- Docker / Docker Compose ile sunucu kurulumu
+- Headless/sunucu kullanımına uygun yapılandırma
+- Ortam değişkenleriyle secret yönetimi
+- Daha pratik deploy ve operasyon notları
 
-### ✅ Headless Terminal Modu
-- Komut satırından `--headless` parametresi ile çalıştırılabilir
-- Interaktif menü sistemi
-- Terminal üzerinden tam kontrol
-- Sunucu ortamlarında çalıştırılabilir
+## Lisans ve attribution
 
-### ✅ Telegram Bildirimleri
-- Boş koltuk bulunduğunda anlık Telegram mesajı
-- Hata durumlarında bildirim
-- Kolay bot kurulumu
-- Hem web hem terminal modunda aktif
+Orijinal projede net bir `LICENSE` dosyası görünmediği için bu repo lisans konusunda temkinli tutulmuştur. Orijinal kodun hakları ilgili sahibine aittir. Bu fork paylaşılırken upstream kaynak açıkça belirtilmelidir.
 
-### ✅ Gelişmiş Özellikler
-- Çoklu çalışma modu (Web UI + Terminal)
-- Gelişmiş hata yönetimi
-- Detaylı loglama sistemi
-- Kolay konfigürasyon
+Eğer upstream maintainer uygun görürse bu geliştirmeler için Pull Request açılması önerilir.
 
-## 📋 Gereksinimler
+## Özellikler
 
-- Java 17 veya üzeri
-- İnternet bağlantısı
-- Telegram Bot (isteğe bağlı)
+- Web arayüzü ile istasyon, tarih ve saat aralığı seçimi
+- Telegram bot üzerinden `/start`, `/status`, `/run`, `/stop` benzeri komutlarla kontrol
+- Boş koltuk bulunduğunda Telegram bildirimi
+- Docker container olarak çalıştırma
+- Sunucu reboot sonrası otomatik başlama için `restart: unless-stopped`
 
-## 🔧 Kurulum
+## Gereksinimler
 
-### 1. JAR Dosyasını İndirin
-En son sürümü [Releases](https://github.com/envermeister/tcdd-yht-tren-bilet-bot/releases) bölümünden indirin.
-
-### 2. Telegram Bot Kurulumu (İsteğe Bağlı)
-
-#### Bot Oluşturma
-1. Telegram'da [@BotFather](https://t.me/BotFather) ile konuşun
-2. `/newbot` komutunu gönderin
-3. Bot adını ve kullanıcı adını belirleyin
-4. Verilen bot token'ını kaydedin
-
-#### Chat ID Öğrenme
-1. [@userinfobot](https://t.me/userinfobot) ile konuşun
-2. `/start` komutunu gönderin
-3. Verilen Chat ID'yi kaydedin
-
-#### Konfigürasyon
-JAR dosyasının bulunduğu dizinde `application.properties` dosyası oluşturun:
-
-```properties
-# Telegram Bot Ayarları
-telegram.bot.token=YOUR_BOT_TOKEN_HERE
-telegram.chat.id=YOUR_CHAT_ID_HERE
-```
-
-## 🖥️ Kullanım
-
-### Web Arayüzü Modu (Varsayılan)
-```bash
-java -jar Release-v1.jar
-```
-Tarayıcınızda [http://localhost:9090](http://localhost:9090) adresini açın.
-
-### Terminal Modu (Headless)
-```bash
-java -jar Release-v1.jar --headless
-```
-
-#### Terminal Menüsü
-```
-=== TCDD Tren Bileti Takip Botu - Terminal Modu ===
-Telegram bildirimleri aktif!
-
-=== MENÜ ===
-1. Takip başlat
-2. Takip durdur
-3. İstasyon listesi göster
-4. Çıkış
-Seçiminiz (1-4):
-```
-
-## 📱 Telegram Bildirimleri
-
-Bot boş koltuk bulduğunda şu şekilde bildirim gönderir:
-
-```
-🚄 BOŞ KOLTUK BULUNDU!
-
-🚉 Ankara → İstanbul
-📅 25-12
-⏰ 14:30 Av. Seats: 3
-
-🔗 https://ebilet.tcddtasimacilik.gov.tr/sefer-listesi
-```
-
-## ⚙️ Konfigürasyon
-
-### application.properties Dosyası
-```properties
-# Sunucu Ayarları
-server.port=9090
-spring.application.name=YHT Ticket Alarm
-
-# Telegram Bot Ayarları (İsteğe Bağlı)
-telegram.bot.token=YOUR_BOT_TOKEN
-telegram.chat.id=YOUR_CHAT_ID
-
-# TCDD API Token (Değiştirmeyin)
-app.bearer-token=...
-```
-
-## 🔍 Özellikler
-
-### Web Arayüzü
-- Görsel istasyon seçimi
-- Tarih ve saat aralığı belirleme
-- Gerçek zamanlı log görüntüleme
-- Alarm ayarları
-- Özel istasyon ekleme
-
-### Terminal Modu
-- Interaktif menü sistemi
-- Numara ile istasyon seçimi
-- Gerçek zamanlı konsol çıktısı
-- Kolay kontrol (başlat/durdur)
-
-### Telegram Entegrasyonu
-- Anlık bildirimler
-- Hata raporlama
-- Bağlantı testi
-- Kolay kurulum
-
-## 🚨 Önemli Notlar
-
-- Bearer token uygulamada mevcuttur, değiştirmenize gerek yoktur
-- Yüksek koltuk sayılarında küçük marjinal hatalar olabilir
-- Düşük sayılarda bu sorun yaşanmaz
-- 5 saniye aralıklarla kontrol yapar
-
-## 🛠️ Geliştirme
-
-### Kaynak Koddan Derleme
-```bash
-git clone https://github.com/envermeister/tcdd-yht-tren-bilet-bot.git
-cd tcdd-yht-tren-bilet-bot
-mvn clean package -DskipTests
-```
-
-### Gerekli Bağımlılıklar
-- Spring Boot 3.2.3
-- Vaadin 24.3.7
-- RestAssured 5.4.0
 - Java 17+
+- Docker / Docker Compose
+- Telegram bot token
+- Telegram chat id
+- Güncel TCDD bearer token
 
-## 📄 Lisans
+## Secret güvenliği
 
-Bu proje olduğu gibi sağlanmaktadır, herhangi bir garanti verilmez. Kendi sorumluluğunuzda kullanın.
+Gerçek secret değerlerini repoya koymayın:
 
-## 🤝 Katkıda Bulunma
+- Telegram bot token
+- Telegram chat id
+- TCDD bearer token
+- SSH key dosyaları
+- `.env`
+- `application.properties`
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request açın
+Örnek dosyalar:
 
----
+- `.env.example`
+- `application.properties.example`
 
-**Not:** Bu araç kişisel ihtiyaçlar için geliştirilmiştir. Ticari bir proje değildir.
+Kurulumdan önce:
 
+```bash
+cp .env.example .env
+cp application.properties.example application.properties
+```
+
+Sonra `.env` içindeki değerleri kendi bilgilerinizle doldurun.
+
+## Docker ile çalıştırma
+
+```bash
+docker compose up -d --build
+```
+
+Web arayüzü:
+
+```text
+http://localhost:9090
+```
+
+Log izleme:
+
+```bash
+docker logs -f tcdd-bot
+```
+
+Container durdurma:
+
+```bash
+docker compose down
+```
+
+## Sunucuya deploy
+
+Sunucuda Docker ve Docker Compose kurulu olmalı.
+
+```bash
+rsync -az --delete \
+  --exclude='.git/' \
+  --exclude='target/' \
+  --exclude='.env' \
+  --exclude='application.properties' \
+  ./ ubuntu@YOUR_SERVER:/home/ubuntu/yht-bilet-botu/
+```
+
+Sunucuda:
+
+```bash
+cd /home/ubuntu/yht-bilet-botu
+cp .env.example .env
+cp application.properties.example application.properties
+```
+
+`.env` dosyasını doldurduktan sonra:
+
+```bash
+docker compose up -d --build
+docker logs -f tcdd-bot
+```
+
+## TCDD API erişimi hakkında
+
+TCDD tarafı datacenter/VPS IP'lerinden gelen düzenli trafiği zaman zaman `403 Forbidden` ile engelleyebilir. Bu durumda bot ayakta olsa bile “sunucu yanıt vermedi veya hata döndü” benzeri mesajlar görülebilir.
+
+Öneriler:
+
+- Kontrol aralığını agresif tutmayın.
+- `403`, `429`, `5xx` gibi hatalarda backoff/sessiz bekleme ekleyin.
+- Aynı Telegram bot token'ını iki sunucuda aynı anda long polling ile çalıştırmayın.
+- Yeni sunucuya taşırken eski container'ı durdurun.
+
+## Kaynak koddan derleme
+
+```bash
+mvn clean package -DskipTests
+java -jar target/TrainTicketTracker-1.0-SNAPSHOT.jar
+```
+
+## Pull Request önerisi
+
+Bu fork upstream'e PR olarak gönderilecekse açıklama kısa ve net tutulabilir:
+
+```text
+Adds Telegram bot controls, Docker deployment files, env-based secret configuration,
+and server operation notes.
+```

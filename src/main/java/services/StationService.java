@@ -12,10 +12,15 @@ public class StationService {
 
     public StationService() {
         stations = new ArrayList<>();
-        stations.add(new Station(48, "İSTANBUL(PENDİK)", "Istanbul-Pendik"));
-        stations.add(new Station(98, "ANKARA GAR", "Ankara"));
-        stations.add(new Station(1306, "ERYAMAN YHT", "Ankara-Eryaman"));
-        stations.add(new Station(93, "ESKİŞEHİR", "Eskisehir")); // New city
+        // TCDD 'tms/train-availability' endpointi kısa ID'ler (TMS ID) kullanır.
+        // Yeni EYBİS ID'leri (23456104 vb.) bu API'de '400 Bad Request' hatası döndürüyor.
+        stations.add(new Station(48L, "İSTANBUL(PENDİK)", "İstanbul (Pendik)"));
+        stations.add(new Station(98L, "ANKARA GAR", "Ankara"));
+        stations.add(new Station(1306L, "ERYAMAN YHT", "Ankara (Eryaman)"));
+        stations.add(new Station(93L, "ESKİŞEHİR", "Eskişehir"));
+        
+        // Diğer istasyonların (Konya, Sivas vb.) TMS kısa kodları 
+        // tespit edildikçe uygulama arayüzünden eklenebilir veya buraya yazılabilir.
     }
 
     public List<Station> getStations() {

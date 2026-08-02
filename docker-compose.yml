@@ -1,0 +1,21 @@
+services:
+  tcdd-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tcdd-bot
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    env_file:
+      - .env
+    volumes:
+      - ./application.properties:/app/application.properties
+    environment:
+      - SERVER_PORT=9090
+      - TZ=Europe/Istanbul
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

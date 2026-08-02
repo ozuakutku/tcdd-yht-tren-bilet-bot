@@ -47,16 +47,25 @@ public class MainView extends VerticalLayout {
     private final AtomicInteger logLineCounter = new AtomicInteger(1);
     private final int MAX_LOG_LINES = 30;
     private ScheduledExecutorService scheduler;
-    private final AlertService alertService = new AlertService(true);
-    private final CRUDBase crudBase = new CRUDBase();
-    private final StationService stationService = new StationService();
-    private final TelegramService telegramService = new TelegramService();
+    private final AlertService alertService;
+    private final CRUDBase crudBase;
+    private final StationService stationService;
+    private final TelegramService telegramService;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private final List<String> logLines = new ArrayList<>();
     private final TextField maxTimeField = new TextField("Maximum departure time");
     private final AtomicBoolean alarmsEnabled = new AtomicBoolean(true);
+    private final Checkbox ecoCheckbox = new Checkbox("Ekonomi");
+    private final Checkbox busCheckbox = new Checkbox("Business");
+    private final Checkbox disCheckbox = new Checkbox("Engelli (Tekerlekli Sandalye)");
 
-    public MainView() {
+    @org.springframework.beans.factory.annotation.Autowired
+    public MainView(AlertService alertService, CRUDBase crudBase, StationService stationService,
+            TelegramService telegramService) {
+        this.alertService = alertService;
+        this.crudBase = crudBase;
+        this.stationService = stationService;
+        this.telegramService = telegramService;
         setAlignItems(Alignment.CENTER);
 
         Button killButton = new Button(new Icon(VaadinIcon.CLOSE_CIRCLE));
@@ -130,6 +139,11 @@ public class MainView extends VerticalLayout {
         alarmToggle.setValue(true);
         alarmToggle.addValueChangeListener(event -> alarmsEnabled.set(event.getValue()));
 
+        ecoCheckbox.setValue(true);
+        busCheckbox.setValue(true);
+        disCheckbox.setValue(false);
+        HorizontalLayout seatTypesLayout = new HorizontalLayout(ecoCheckbox, busCheckbox, disCheckbox);
+
         Button startButton = new Button("Start Monitoring");
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -144,7 +158,8 @@ public class MainView extends VerticalLayout {
         resultsArea.setId("log-text-area");
 
         // Disclaimer label below the results area
-        Span disclaimer = new Span("Disclaimer: At high values, available seat count may be incorrect by a small margin. At low numbers, this should not be a problem.");
+        Span disclaimer = new Span(
+                "Disclaimer: At high values, available seat count may be incorrect by a small margin. At low numbers, this should not be a problem.");
         disclaimer.getStyle().set("font-size", "12px").set("color", "gray").set("margin-top", "4px");
 
         Button clearLogsButton = new Button("Clear Logs");
@@ -155,9 +170,8 @@ public class MainView extends VerticalLayout {
             logToUI("Logs cleared at " + LocalDateTime.now().format(timeFormatter));
         });
 
-        Button linkButton = new Button("Open TCDD Ticket Page", event -> getUI().ifPresent(ui ->
-                ui.getPage().open("https://ebilet.tcddtasimacilik.gov.tr/sefer-listesi", "_blank")
-        ));
+        Button linkButton = new Button("Open TCDD Ticket Page", event -> getUI()
+                .ifPresent(ui -> ui.getPage().open("https://ebilet.tcddtasimacilik.gov.tr/sefer-listesi", "_blank")));
         linkButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         startButton.addClickListener(e -> {
@@ -168,15 +182,20 @@ public class MainView extends VerticalLayout {
                 String minTime = timeField.getValue();
                 String maxTime = maxTimeField.getValue();
                 boolean logAllTrains = logCheckbox.getValue();
+                boolean includeEco = ecoCheckbox.getValue();
+                boolean includeBus = busCheckbox.getValue();
+                boolean includeDis = disCheckbox.getValue();
 
                 if (departure == null || arrival == null) {
-                    Notification.show("Please select both departure and arrival cities.", 3000, Notification.Position.MIDDLE);
+                    Notification.show("Please select both departure and arrival cities.", 3000,
+                            Notification.Position.MIDDLE);
                     monitoring.set(false);
                     return;
                 }
 
                 scheduler = Executors.newScheduledThreadPool(1);
-                startMonitoring(date, departure, arrival, minTime, maxTime, logAllTrains);
+                startMonitoring(date, departure, arrival, minTime, maxTime, logAllTrains, includeEco, includeBus,
+                        includeDis);
 
                 startButton.setEnabled(false);
                 stopButton.setEnabled(true);
@@ -203,6 +222,7 @@ public class MainView extends VerticalLayout {
                 maxTimeField,
                 logCheckbox,
                 alarmToggle,
+                seatTypesLayout,
                 startButton,
                 stopButton,
                 clearLogsButton,
@@ -212,7 +232,8 @@ public class MainView extends VerticalLayout {
         );
     }
 
-    private void startMonitoring(String date, Station departure, Station arrival, String minTime, String maxTime, boolean logAllTrains) {
+    private void startMonitoring(String date, Station departure, Station arrival, String minTime, String maxTime,
+            boolean logAllTrains, boolean includeEco, boolean includeBus, boolean includeDis) {
         if (scheduler == null || scheduler.isShutdown()) {
             scheduler = Executors.newScheduledThreadPool(1);
         }
@@ -223,7 +244,8 @@ public class MainView extends VerticalLayout {
             }
 
             try {
-                logToUI("Checking trips from " + departure.getCityName() + " to " + arrival.getCityName() + " at " + LocalDateTime.now().format(timeFormatter));
+                logToUI("Checking trips from " + departure.getCityName() + " to " + arrival.getCityName() + " at "
+                        + LocalDateTime.now().format(timeFormatter));
 
                 Response response = crudBase.getAllTrips(date, departure, arrival);
 
@@ -232,7 +254,8 @@ public class MainView extends VerticalLayout {
                     return;
                 }
 
-                List<String> logs = alertService.checkAndAlertForAvailability(response.getBody(), minTime, maxTime, alarmsEnabled.get());
+                List<String> logs = alertService.checkAndAlertForAvailability(response.getBody(), minTime, maxTime,
+                        alarmsEnabled.get(), includeEco, includeBus, includeDis);
 
                 if (!logs.isEmpty()) {
                     boolean hasAlerts = false;
@@ -246,15 +269,16 @@ public class MainView extends VerticalLayout {
                     }
 
                     if (hasAlerts) {
-                        getUI().ifPresent(ui -> ui.access(() -> Notification.show("Empty seats found! Check results.", 5000, Notification.Position.TOP_CENTER)));
-                        
+                        getUI().ifPresent(ui -> ui.access(() -> Notification.show("Empty seats found! Check results.",
+                                5000, Notification.Position.TOP_CENTER)));
+
                         // Telegram bildirimi gönder
                         if (telegramService.isConfigured()) {
                             String telegramMessage = "🚄 BOŞ KOLTUK BULUNDU!\n\n" +
-                                                   "🚉 " + departure.getCityName() + " → " + arrival.getCityName() + "\n" +
-                                                   "📅 " + date + "\n" +
-                                                   "⏰ Detaylar web arayüzünde\n\n" +
-                                                   "🔗 https://ebilet.tcddtasimacilik.gov.tr/sefer-listesi";
+                                    "🚉 " + departure.getCityName() + " → " + arrival.getCityName() + "\n" +
+                                    "📅 " + date + "\n" +
+                                    "⏰ Detaylar web arayüzünde\n\n" +
+                                    "🔗 https://ebilet.tcddtasimacilik.gov.tr/sefer-listesi";
                             telegramService.sendMessage(telegramMessage);
                         }
                     }
@@ -264,7 +288,7 @@ public class MainView extends VerticalLayout {
             } catch (Exception ex) {
                 logToUI("Error: " + ex.getMessage());
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 0, 60, TimeUnit.SECONDS);
     }
 
     private void logToUI(String message) {
@@ -288,9 +312,9 @@ public class MainView extends VerticalLayout {
             if (logLines.size() > MAX_LOG_LINES) {
                 logLines.clear();
                 String cleanupMessage = String.format("%04d: %s%s",
-                    logLineCounter.getAndIncrement(),
-                    "[" + LocalDateTime.now().format(timeFormatter) + "] ",
-                    "Cleaned old log entries to prevent memory issues");
+                        logLineCounter.getAndIncrement(),
+                        "[" + LocalDateTime.now().format(timeFormatter) + "] ",
+                        "Cleaned old log entries to prevent memory issues");
                 logLines.add(cleanupMessage);
             }
 
@@ -300,13 +324,13 @@ public class MainView extends VerticalLayout {
             }
             resultsArea.setValue(sb.toString());
 
-            ui.getPage().executeJs("setTimeout(function() { document.getElementById($0).scrollTop = document.getElementById($0).scrollHeight; }, 100);", resultsArea.getId().orElse("log-text-area"));
+            ui.getPage().executeJs(
+                    "setTimeout(function() { document.getElementById($0).scrollTop = document.getElementById($0).scrollHeight; }, 100);",
+                    resultsArea.getId().orElse("log-text-area"));
 
             ui.push();
         }));
     }
-
-
 
     // Custom Stations
     private Button createCustomStationDialog(ComboBox<Station> departureBox, ComboBox<Station> arrivalBox) {
@@ -335,7 +359,7 @@ public class MainView extends VerticalLayout {
 
             Button saveButton = new Button("Save", event -> {
                 try {
-                    int stationId = Integer.parseInt(stationIdField.getValue().trim());
+                    long stationId = Long.parseLong(stationIdField.getValue().trim());
                     String stationName = stationNameField.getValue().trim();
                     String cityName = cityNameField.getValue().trim();
 
@@ -377,6 +401,5 @@ public class MainView extends VerticalLayout {
 
         return addCustomStationBtn;
     }
-
 
 }

@@ -1,1 +1,17 @@
-/.DS_Store
+.DS_Store
+
+# Build outputs
+target/
+
+# Local secrets / runtime configuration
+.env
+application.properties
+*.key
+*.pem
+
+# Logs
+*.log
+
+# IDE/editor
+.idea/
+.vscode/
