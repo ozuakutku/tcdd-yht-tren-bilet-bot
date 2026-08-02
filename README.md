@@ -10,12 +10,6 @@ Bu fork üzerinde yapılan başlıca geliştirmeler:
 - Ortam değişkenleriyle secret yönetimi
 - Daha pratik deploy ve operasyon notları
 
-## Lisans ve attribution
-
-Orijinal projede net bir `LICENSE` dosyası görünmediği için bu repo lisans konusunda temkinli tutulmuştur. Orijinal kodun hakları ilgili sahibine aittir. Bu fork paylaşılırken upstream kaynak açıkça belirtilmelidir.
-
-Eğer upstream maintainer uygun görürse bu geliştirmeler için Pull Request açılması önerilir.
-
 ## Özellikler
 
 - Web arayüzü ile istasyon, tarih ve saat aralığı seçimi
